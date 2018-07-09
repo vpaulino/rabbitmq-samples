@@ -2,7 +2,7 @@
 
 # Introduction
 
-This solutions consists on a Facade over RabbitMQ C# client that expose two clients types to interact with rabbitmq. TopicPublisher and TopicSubscriber. 
+This solution consists on a Facade over RabbitMQ C# client that expose two clients types to interact with rabbitmq. TopicPublisher and TopicSubscriber. 
 
 This two types have dependencies to be used such as ILoggerProvider from Microsoft.Extensions.Logging and an implementation of ISerializable. 
 
