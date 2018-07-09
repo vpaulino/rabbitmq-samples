@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<PackageId>RabbitMQFacade</PackageId>
+		<PackageVersion>1.0.0</PackageVersion>
+		<Authors>Vítor Paulino</Authors>
+		<Description>Contains all the contracts and types definition from wich publisher and subscriber are dependent on</Description>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes>First release</PackageReleaseNotes>
+		<PackageTags>AMQP RabbiMQ</PackageTags>
+	</PropertyGroup>
+	
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.1" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
+  </ItemGroup>
+
+</Project>
