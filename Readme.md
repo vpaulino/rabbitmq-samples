@@ -5,8 +5,8 @@
 This solution consists on a set of Facades over [RabbitMQ C# client library](https://www.rabbitmq.com/dotnet-api-guide.html).
 This facades abstracts the boilerplate code that enables comunication with rabbimtmq broker in diferent comunication patterns, such as:
 
-[x]  Publisher/Subscriber
-[ ]  RPC
+ - [x]  Publisher/Subscriber
+ - [ ]  RPC
 
 This two types have dependencies to be used such as ILoggerProvider from Microsoft.Extensions.Logging and an implementation of ISerializable. 
 
