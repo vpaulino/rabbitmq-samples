@@ -12,8 +12,8 @@ namespace RabbitMQFacade.Publisher
     public class TopicPublisher : RabbitMQClient
     {
        
-        public TopicPublisher(string serverUri, string exchange, IConnectionPool connectionPool, ISerializer serializer, ILoggerProvider loggerProvider) 
-            : base(serverUri, exchange, connectionPool, serializer, loggerProvider) 
+        public TopicPublisher(string serverUri, string exchange, IConnectionPool connectionPool, ISerializerNegotiator serializerNegotiator, ILoggerProvider loggerProvider) 
+            : base(serverUri, exchange, connectionPool, serializerNegotiator, loggerProvider) 
         {
             
             this.logger = loggerProvider.CreateLogger("TopicPublisher");
@@ -25,9 +25,26 @@ namespace RabbitMQFacade.Publisher
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
             try
             {
-                var bytes = Serializer.Serialize(message);
+                IBasicProperties properties = this.channel.CreateBasicProperties();
 
-                this.channel.BasicPublish(this.Exchange, routingKey, null, bytes);
+                if (message.Headers == null)
+                {
+                    throw new ArgumentNullException("message.Headers");    
+                }
+
+                properties.ContentType = message.Headers.ContentType;
+                properties.ContentEncoding = message.Headers.ContentEncoding.ToString();
+
+               ISerializer serializer = this.SerializerNegotiator.Negotiate(properties);
+
+                if (serializer == null)
+                {
+                    throw new ArgumentException("Not found compatible contentType nor content encoding on message to publish");
+                }
+
+                var bytes = serializer.Serialize(message);
+
+                this.channel.BasicPublish(this.Exchange, routingKey, properties, bytes);
             }
             catch (Exception ex)
             {

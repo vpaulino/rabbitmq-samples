@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Extensions.Logging.Console;
 using RabbitMQFacade.Publisher;
+using RabbitMQFacade.Serialization;
+using RabbitMQFacade.Serialization.Json;
 
 namespace ClientApp
 {
@@ -16,9 +18,10 @@ namespace ClientApp
             var argumentsParsed = ParseArguments(args);
 
             MemoryConnectionPool connectionPool = new MemoryConnectionPool(new ConsoleLoggerProvider(new ConsoleLoggerSettings()));
+            DefaultSerializerNegotiator negotiator = new DefaultSerializerNegotiator(new List<ISerializer>() { new NewtonSoftSerialization() });
 
-            clients.Add("1", (arguments) => new PublisherClient(arguments.Item1, arguments.Item2, arguments.Item3, connectionPool));
-            clients.Add("2", (arguments) => new SubscriberClient(arguments.Item1, arguments.Item2, arguments.Item3, connectionPool));
+            clients.Add("1", (arguments) => new PublisherClient(arguments.Item1, arguments.Item2, arguments.Item3, connectionPool, negotiator));
+            clients.Add("2", (arguments) => new SubscriberClient(arguments.Item1, arguments.Item2, arguments.Item3, connectionPool, negotiator));
 
             Console.WriteLine("Choose what type of client is this:");
             Console.WriteLine("1 - Publisher");

@@ -18,7 +18,7 @@ namespace RabbitMQFacade
 
         protected IModel channel;
         public string Exchange { get; private set; }
-        public ISerializer Serializer { get; }
+        public ISerializerNegotiator SerializerNegotiator { get; }
         public IConnectionPool connectionPool { get; }
 
         public ILogger logger { get; set; }
@@ -27,11 +27,11 @@ namespace RabbitMQFacade
 
         protected SemaphoreSlim channelControl = new SemaphoreSlim(1);
         
-        public RabbitMQClient(string serverUri, string exchange, IConnectionPool connectionPool, ISerializer serializer, ILoggerProvider loggerProvider)
+        public RabbitMQClient(string serverUri, string exchange, IConnectionPool connectionPool, ISerializerNegotiator serializerNegotiator, ILoggerProvider loggerProvider)
         {
             this.ServerUri = serverUri;
             this.Exchange = exchange;
-            this.Serializer = serializer;
+            this.SerializerNegotiator = serializerNegotiator;
             this.connectionPool = connectionPool;
 
             this.logger = loggerProvider.CreateLogger("TopicPublisher");

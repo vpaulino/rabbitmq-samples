@@ -5,37 +5,23 @@ namespace RabbitMQFacade
 {
     public class Message<T>
     {
-
-        public string ContentType { get; set; }
-
+        public MessageHeaders Headers { get; set; }
+         
         public Message()
         {
-            
-            this.Headers = new Dictionary<string, object>();
             this.Created = DateTime.UtcNow;
         }
 
-        public Message(T body)
+        public Message(T body, MessageHeaders headers) : this()
         {
             this.Body = body;
-            this.Headers = new Dictionary<string, object>();
-            this.Created = DateTime.UtcNow;
+            this.Headers = headers;
         }
 
-        public Message(Guid correlationId, T body) 
-            : this(body)
-        {
-            this.CorrelationId = correlationId;
-        }
+        
 
-        public Guid? CorrelationId { get; set; }
         public DateTime Created { get; set; }
-
-        public Dictionary<string, object> Headers
-        {
-            get; private set;
-        }
-
+         
         public T Body { get; set; }
     }
 }

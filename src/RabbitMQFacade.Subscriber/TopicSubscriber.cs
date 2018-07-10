@@ -11,19 +11,35 @@ namespace RabbitMQFacade.Subscriber
 {
     public class TopicSubscriber<T>: RabbitMQClient,  IBasicConsumer
     {
-      
-         
+        public string ConsumerTag { get; private set; }
 
-        public TopicSubscriber(string serverUri, string exchange, IConnectionPool connectionPool, ISerializer serializer, ILoggerProvider loggerProvider)
-             : base(serverUri, exchange, connectionPool, serializer, loggerProvider)
+        public TopicSubscriber(string serverUri, string exchange, IConnectionPool connectionPool, ISerializerNegotiator serializerNegotiator, ILoggerProvider loggerProvider)
+             : base(serverUri, exchange, connectionPool, serializerNegotiator, loggerProvider)
         {
            
             
 
             this.logger = loggerProvider.CreateLogger("TopicPublisher");
         }
-         
 
+        public Task<bool> Cancel()
+        {
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            bool result = true;
+
+            try
+            { 
+                this.channel.BasicCancel(this.ConsumerTag);
+                tcs.SetResult(result);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+                throw;
+            }
+
+            return tcs.Task;
+        }
 
         public Task Subscribe(string queueName, bool autoAck = true)
         {
@@ -33,7 +49,7 @@ namespace RabbitMQFacade.Subscriber
             try
             {
                 channelControl.Wait();
-                var consume = this.channel.BasicConsume(queueName, autoAck, this);
+                this.ConsumerTag = this.channel.BasicConsume(queueName, autoAck, this);
                 channelControl.Release();
             }
             catch (Exception ex)
@@ -56,6 +72,7 @@ namespace RabbitMQFacade.Subscriber
         public void HandleBasicCancel(string consumerTag)
         {
             this.logger.LogInformation($"TopicSubscriber.HandleBasicCancel - consumerTag: {consumerTag}");
+            ConsumerCancelled?.Invoke(this, new ConsumerEventArgs(consumerTag));
         }
 
         public void HandleBasicCancelOk(string consumerTag)
@@ -69,16 +86,21 @@ namespace RabbitMQFacade.Subscriber
         }
 
         public event EventHandler<Message<T>> OnMessageReceived;
+
         public event EventHandler<ConsumerEventArgs> ConsumerCancelled;
 
         public void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
         {
             this.logger.LogInformation($"TopicSubscriber.HandleBasicConsumeOk - {{ consumerTag: \"{consumerTag}\",deliveryTag : \"{deliveryTag}\",redelivered : \"{redelivered}\",exchange : \"{exchange}\",routingKey : \"{routingKey}\"   }} ");
-            Message<T>  result = this.Serializer.DeSerialize<T>(body);
+
+            ISerializer serializer = this.SerializerNegotiator.Negotiate(properties);
+
+            Message<T>  result = serializer.DeSerialize<T>(body, properties);
 
             OnMessageReceived?.Invoke(this, result);
             
         }
+
         public void HandleModelShutdown(object model, ShutdownEventArgs reason)
         {
             this.logger.LogInformation($"TopicSubscriber.HandleBasicConsumeOk - ShutdownEventArgs.Cause: {reason.Cause}, ShutdownEventArgs.ReplyText: {reason.ReplyText}, ChannelNumber: {(model as IModel).ChannelNumber} IsClosed : {(model as IModel).IsClosed},  CloseReason : {(model as IModel).CloseReason}");
